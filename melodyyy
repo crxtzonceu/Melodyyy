@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>A Message for You ❤️</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lobster&display=swap" rel="stylesheet">
+  
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: white;
+      font-family: "Arial", sans-serif;
+      transition: background-color 0.4s ease;
+      text-align: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    #message {
+      font-size: 24px;
+      font-weight: bold;
+      color: #444;
+      animation: tilt-shaking 0.25s infinite;
+      position: absolute;
+      width: 90%;
+    }
+
+    #counter {
+      display: none;
+      font-family: "Lobster", serif;
+      font-size: 42px; /* Fixed size to prevent drift */
+      font-style: italic;
+      z-index: 20;
+      position: absolute;
+    }
+
+    #heart-container {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      z-index: 1;
+    }
+
+    #heart {
+      width: 60vw;
+      max-width: 250px;
+      stroke: #EE66A6;
+      stroke-width: 1.3;
+      fill: lightyellow;
+      transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), fill 0.5s ease;
+    }
+
+    #final-message {
+      position: absolute;
+      font-size: 26px;
+      text-align: center;
+      width: 80%;
+      opacity: 0;
+      transition: opacity 1s ease;
+      font-family: 'Lobster', cursive;
+      color: #7a0218; /* The deep red you liked */
+      line-height: 1.2;
+      z-index: 10;
+    }
+
+    #reveal-btn {
+      display: none;
+      position: absolute;
+      bottom: 12%;
+      padding: 12px 30px;
+      font-family: "Lobster", serif;
+      font-size: 20px;
+      background-color: #d90429;
+      color: white;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      z-index: 30;
+      box-shadow: 0 4px 15px rgba(217, 4, 41, 0.4);
+      animation: pulse 1.5s infinite;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 100;
+      left: 0; top: 0; width: 100%; height: 100%;
+      background-color: rgba(0,0,0,0.7);
+      backdrop-filter: blur(10px);
+    }
+
+    .modal-content {
+      background-color: white;
+      margin: 30vh auto;
+      padding: 30px;
+      border-radius: 25px;
+      width: 85%;
+      max-width: 350px;
+      text-align: center;
+      position: relative;
+    }
+
+    .close-btn { position: absolute; right: 20px; top: 10px; font-size: 28px; cursor: pointer; color: #999; }
+
+    @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+    @keyframes tilt-shaking { 
+      0%, 100% { transform: rotate(0deg); } 
+      25% { transform: rotate(3deg); } 
+      75% { transform: rotate(-3deg); } 
+    }
+    .floating { position: absolute; animation: floatUp 4s linear infinite; z-index: 2; pointer-events: none; }
+    @keyframes floatUp { 
+      0% { transform: translateY(10vh) scale(1); opacity: 1; } 
+      100% { transform: translateY(-110vh) scale(1.5); opacity: 0; } 
+    }
+  </style>
+</head>
+
+<body>
+  <p id="message">Tap Fastttt.. Melodyyy!! 😹❤️</p>
+  <p id="counter">0</p>
+
+  <div id="heart-container">
+    <svg id="heart" viewBox="0 0 24 24">
+      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
+        fill="#ff8fa3" stroke="#d90429" stroke-width="0.5" />
+    </svg>
+    <p id="final-message"></p>
+  </div>
+
+  <button id="reveal-btn">Open Message 💌</button>
+
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <span class="close-btn">&times;</span>
+      <h2 style="font-family: 'Lobster'; color: #d90429; font-size: 28px;">For Melodyyy...</h2>
+      <p id="personal-message" style="margin-top: 15px; line-height: 1.6; font-size: 18px; color: #444;"></p>
+    </div>
+  </div>
+
+  <div id="floating-container"></div>
+
+  <script>
+    let tapCount = 0;
+    const body = document.body;
+    const heart = document.getElementById('heart');
+    const counter = document.getElementById('counter');
+    const message = document.getElementById('message');
+    const finalMsg = document.getElementById('final-message');
+    const revealBtn = document.getElementById('reveal-btn');
+    const emojiArsenal = ['❤️', '💖', '✨', '🌸', '🌹', '💐', '🐱', '🦋', '⭐', '💕', '🫶🏻', 'Melody', 'cutiee!', 'melodyyyyy', 'cutieeeee'];
+
+    // Listen for taps anywhere on the screen
+    body.addEventListener('pointerdown', () => {
+      if (tapCount >= 14) return;
+      tapCount++;
+      counter.textContent = tapCount;
+      if (navigator.vibrate) navigator.vibrate(40);
+
+      if (tapCount === 1) {
+        message.style.display = 'none';
+        counter.style.display = 'block';
+        document.getElementById('heart-container').style.opacity = '1';
+      }
+
+      // Dynamic color shift for the counter
+      let r = 85 + (tapCount * 3);
+      let g = 85 - (tapCount * 6);
+      let b = 85 - (tapCount * 4);
+      counter.style.color = `rgb(${r}, ${g}, ${b})`;
+
+      // Smooth heart growth
+      let scale = 1 + (tapCount * 0.045); 
+      heart.style.transform = `scale(${scale})`;
+
+      // BG Color transition
+      let intensity = tapCount * 6;
+      body.style.backgroundColor = `rgb(255, ${255 - intensity}, ${255 - Math.floor(intensity/1.5)})`;
+
+      if (tapCount >= 14) {
+        counter.style.display = 'none';
+        finalMsg.innerHTML = "Happy Heart's Day<br>Melody!! 🐱❤️🌹"; 
+        finalMsg.style.opacity = '1';
+        revealBtn.style.display = 'block';
+        body.style.backgroundColor = "#ffe5ec";
+        createFloatingHearts();
+      }
+    });
+
+    revealBtn.addEventListener('click', (e) => {
+      e.stopPropagation(); 
+      document.getElementById('personal-message').innerText = "Thanks so much for being such a supportive friend tee kahit hindi tayo lagi naguusap :), at lalo na lately sa hospitalization at recovery ng tatay ko 🥹. I appreciate our friendship. Happy Valentine's Day! 🫶🏻❤️";
+      document.getElementById('modal').style.display = 'block';
+    });
+
+    document.querySelector('.close-btn').onclick = () => {
+      document.getElementById('modal').style.display = 'none';
+    };
+
+    function createFloatingHearts() {
+      const container = document.getElementById('floating-container');
+      setInterval(() => {
+        const h = document.createElement('div');
+        h.className = 'floating';
+        h.innerHTML = emojiArsenal[Math.floor(Math.random() * emojiArsenal.length)];
+        h.style.left = Math.random() * 100 + 'vw';
+        h.style.top = '90vh';
+        h.style.fontSize = (Math.random() * 15 + 15) + 'px';
+        container.appendChild(h);
+        setTimeout(() => h.remove(), 4000);
+      }, 300);
+    }
+  </script>
+</body>
+</html>
